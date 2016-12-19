@@ -1,6 +1,7 @@
 import React from 'react';
-import Resolver from './Resolver.js';
+import Resolver, { HOC } from './Resolver.js';
 import resolve from './resolve.js';
+import { getDataFromTree, renderToStringWithData } from './apollo.js';
 
 // JOB: Make data available via context and by rendering script tag to DOM
 // The direct child must be <Router> or <RouterContext>
@@ -34,10 +35,6 @@ class ComponentData extends React.PureComponent {
     return (
       <span>
         {NewChild}
-
-        { data &&
-          <script id='COMPONENT_DATA_PAYLOAD' type='application/json' dangerouslySetInnerHTML={{__html: safeStringify(data)}}></script>
-        }
       </span>
     );
   }
@@ -74,4 +71,5 @@ function safeStringify(obj){
 }
 
 export default ComponentData;
-export { resolve };
+export { HOC, Resolver, resolve, getDataFromTree };
+

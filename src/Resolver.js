@@ -4,8 +4,6 @@ import React from 'react';
 // Much smaller filesize then using async/await and transpiling
 import Promise from 'promise-polyfill'; 
 
-// JOB: give the component data, whether by getting it via context or by fetching it itself
-
 class Resolver extends React.PureComponent {
 
   constructor(props, context){
@@ -21,19 +19,35 @@ class Resolver extends React.PureComponent {
 
     const { data } = this.context;
 
+    // SERVER
     if (data){
-
       console.log('[RESOLVER Have props from context');
-
-      this.setState({ data: data });
-
+      const props = this.getPropsFromData(data);
+      this.setState({ data: props });
+    // CLIENT
     }else if (isClient()){
-
-      //console.log('[RESOLVER] No props');
-
       this.clientResolve()
     }
 
+  }
+
+  getPropsFromData(data){
+    let props;
+
+    // If we're using recursive resolve then components are indexed by displayName
+    if (data && data._resolverComponents){
+
+      const child = React.Children.only(this.props.children);
+      const childName = child.type.displayName;
+      props = data._resolverComponents[childName];
+
+    // Otherwise data is the props
+    // We can't normalize this because React Router renderProps doesn't give us the component instance
+    }else{
+      props = data;
+    }
+
+    return props;
   }
 
   clientResolve(){
@@ -43,10 +57,8 @@ class Resolver extends React.PureComponent {
     let data = this.clientResolveFromDOM();
 
     if (data){
-
       this.setState({ data: data });
       console.log('[RESOLVER] Re-hydration was successful', data);
-
     }else{
 
       console.log('[RESOLVER] Re-hydration failed (no data)');
@@ -60,20 +72,14 @@ class Resolver extends React.PureComponent {
           console.log(`[RESOLVER] Unable to resolve Component.${this.context.method}()`);
         }
       });
-
     }
-
   }
+
 
   clientResolveFromDOM(){
     const element = document.getElementById('COMPONENT_DATA_PAYLOAD');
     const data = (element ? JSON.parse(element.innerHTML) : null);
-
-    if (element){
-      element.remove();
-    }
-
-    return data;
+    return this.getPropsFromData(data);
   }
 
   // Call component's static method, save data to state, pass as props to child component
@@ -94,14 +100,13 @@ class Resolver extends React.PureComponent {
 
     if (this.state.data){
       const ComponentWithProps = React.cloneElement(Component, this.state.data);
-      // Adding a key when props are added forces component to remount
-      // Makes it easier since component doesn't need to implement componentWillReceiveProps to update
+      // Adding a key so component remounts
+      // Easier because no need to implement componentWillReceiveProps
       const ComponentWithKey = React.cloneElement(ComponentWithProps, { key: 'hasInitialProps' });
       return ComponentWithKey;
     }else{
       return Component;
     }
-
   }
 }
 
@@ -113,5 +118,17 @@ Resolver.contextTypes = {
 function isClient(){
   return typeof window !== 'undefined';
 }
+
+
+export const HOC = (WrappedComponent) => {
+  return (props, context) => (
+
+    <Resolver>
+      <WrappedComponent {...props} />
+    </Resolver>
+    
+  );
+}
+
 
 export default Resolver;
