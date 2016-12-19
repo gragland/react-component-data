@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.2",
+    "object-assign": "^4.1.0",
     "promise-polyfill": "^6.0.2"
   },
   "repository": {

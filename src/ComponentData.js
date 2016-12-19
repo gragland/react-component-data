@@ -1,7 +1,9 @@
 import React from 'react';
-import Resolver, { HOC } from './Resolver.js';
-import resolve from './resolve.js';
-import { getDataFromTree, renderToStringWithData } from './apollo.js';
+
+import { Resolver, HOC } from './Resolver.js';
+import { resolve } from './resolve.js';
+import { resolveRecursive } from './recursive.js';
+import { getScript } from './script.js';
 
 // JOB: Make data available via context and by rendering script tag to DOM
 // The direct child must be <Router> or <RouterContext>
@@ -66,10 +68,7 @@ function wrapWithResolver(Component, props, key){
   );
 }
 
-function safeStringify(obj){
-  return JSON.stringify(obj).replace(/<\/script/g, '<\\/script').replace(/<!--/g, '<\\!--');
-}
-
 export default ComponentData;
-export { HOC, Resolver, resolve, getDataFromTree };
+
+export { Resolver, resolve, resolveRecursive, getScript, HOC };
 

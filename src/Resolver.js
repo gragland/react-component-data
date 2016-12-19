@@ -4,7 +4,7 @@ import React from 'react';
 // Much smaller filesize then using async/await and transpiling
 import Promise from 'promise-polyfill'; 
 
-class Resolver extends React.PureComponent {
+export class Resolver extends React.PureComponent {
 
   constructor(props, context){
     super(props);
@@ -38,8 +38,7 @@ class Resolver extends React.PureComponent {
     if (data && data._resolverComponents){
 
       const child = React.Children.only(this.props.children);
-      const childName = child.type.displayName;
-      props = data._resolverComponents[childName];
+      props = data._resolverComponents[child.type.displayName];
 
     // Otherwise data is the props
     // We can't normalize this because React Router renderProps doesn't give us the component instance
@@ -75,10 +74,9 @@ class Resolver extends React.PureComponent {
     }
   }
 
-
   clientResolveFromDOM(){
-    const element = document.getElementById('COMPONENT_DATA_PAYLOAD');
-    const data = (element ? JSON.parse(element.innerHTML) : null);
+    const payloadElement = document.getElementById('COMPONENT_DATA_PAYLOAD');
+    const data = (payloadElement ? JSON.parse(payloadElement.innerHTML) : null);
     return this.getPropsFromData(data);
   }
 
@@ -119,16 +117,10 @@ function isClient(){
   return typeof window !== 'undefined';
 }
 
-
 export const HOC = (WrappedComponent) => {
   return (props, context) => (
-
     <Resolver>
       <WrappedComponent {...props} />
     </Resolver>
-    
   );
 }
-
-
-export default Resolver;

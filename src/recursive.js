@@ -1,14 +1,12 @@
 import React from 'react';
-import * as ReactDOM from 'react-dom/server';
 import flattenDeep from 'lodash/flattendeep';
-
-//import assign = require('object-assign');
-const assign = Object.assign;
+import assign from 'object-assign';
+import { getScript } from './script.js';
 
 // Recurse an React Element tree, running visitor on each element.
 // If visitor returns `false`, don't call the element's render function
 // or recurse into its child elements
-export function walkTree(element, context, mergeProps, visitor) {
+function walkTree(element, context, mergeProps, visitor) {
   const Component = element.type;
 
   if (typeof Component === 'function') {
@@ -125,13 +123,10 @@ function getQueriesFromTree(rootElement, rootContext, fetchRoot, mergeProps){
   return queries;
 }
 
-
-let queries_all = [];
-
 const finalData = {};
 
 // XXX component Cache
-export function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps, isTopLevel){
+function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps, isTopLevel){
 
   //console.log(`Now searching element (${rootElement.type.name || rootElement.type.displayName}):`, rootElement);
 
@@ -143,8 +138,6 @@ export function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps,
   if (!queries.length) {
     return Promise.resolve();
   }
-
-  queries_all.push(queries);
 
   // We've traversed down as far as possible in thecurrent tree branch ...
   // Wait on each query that we found, re-rendering the subtree when it's done.
@@ -162,26 +155,22 @@ export function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps,
     // Only return final data at top level
     // Not inside recursive getDataFromTree calls
     if (isTopLevel){
-
-      const data = { _resolverComponents: finalData };
-      
-      return data;
-
-      /*
-      const script = getScript(data);
-      return { data: data, script: script };
-      */
-      
+      return finalData;
     }
   });
 }
 
-function getScript(data){
-  return ( data && <script id='COMPONENT_DATA_PAYLOAD' type='application/json' dangerouslySetInnerHTML={{__html: safeStringify(data)}}></script> );
+export function resolveRecursive(element){
+  return getDataFromTree(element, null, true, null, true)
+  .then((finalData) => {
+
+    const data = { _resolverComponents: finalData };
+    return data;
+
+    /*
+    const script = getScript(data);
+    return { data: data, script: script };
+    */
+
+  })
 }
-
-function safeStringify(obj){
-  return (obj ? JSON.stringify(obj).replace(/<\/script/g, '<\\/script').replace(/<!--/g, '<\\!--') : null);
-}
-
-
