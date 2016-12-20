@@ -1,29 +1,65 @@
 import React from 'react';
-
-import { Resolver, HOC } from './Resolver.js';
+import { Resolver } from './Resolver.js';
+import { getScript, getScriptData, isClient } from './script.js';
 import { resolve } from './resolve.js';
-import { resolveRecursive } from './recursive.js';
-import { getScript } from './script.js';
 
-// JOB: Make data available via context and by rendering script tag to DOM
-// The direct child must be <Router> or <RouterContext>
-// It supplies <Router> with createElement(), which supplies the app component with an HOC.
-
-// HOC immediately gets data via context for server-render and re-hydrates from script tag on client-render
-// HOC will call Component.getInitialProps() if no data to re-hydrate from (navigated to the route client-side or disabled server data fetching)
+/* 
+  - Handles passing of data down the tree and re-hydration between server and client
+  - Wraps child with <Resolver> which mediates getting data from this component via context or fetching it directly if not available ...
+  - Or if child is React Router it adds the createElement hook to Router so that route components always get wrapped with <Resolver>
+  - When rendered on the server:
+    - Saves props.data to state and makes it available via context for <Resolver> components
+    - Renders a <script> tag to the DOM that contains props.data (for client-side re-hydration)
+  - When rendered on the client:
+    - Gets <script> data from DOM (before DOM gets wiped by client-side render)
+    - Saves <script> data to state and makes it available via context for <Resolver> components
+  - TODO:
+    - When browsing to different route the component gets original routes props added to it (since it gets data from context) ...
+    ... We either need to (1) clear state before route change, (2) store an expiration time, or (3) always index data with a reliable key (component.displayname, etc)
+    ... (2) might be the best for now because it also solves the issue of browsing back to the original route, but not wanting it to load its stale data
+    ... When ComponentData hydrates have it set current time to state, then Resolvers can check to see how much time has passed.
+*/
 
 class ComponentData extends React.PureComponent {
+
+  constructor(props, context){
+    super(props);
+
+    this.state = {
+      data: null
+    };
+  }
 
   getChildContext () {
     return {
       method: this.props.method,
-      data: this.props.data
+      data: this.state.data
     };
+  }
+
+  componentWillMount(){
+    let data;
+
+    // If client-side grab <script> data from DOM before it's wiped clean
+    // This way we don't have to require that the library user add the <script> tag themself
+    if (isClient()){
+      data = getScriptData();
+
+    // If server-side then we expect all data to be passed in as a prop
+    }else{
+      data = this.props.data;
+    }
+
+    if (data){
+      this.setState({ data: data });
+    }
   }
 
   render(){
 
-    const { data, children } = this.props;
+    const { data } = this.state;
+
+    const { children } = this.props;
     const Child = React.Children.only(children);
 
     let NewChild;
@@ -37,6 +73,9 @@ class ComponentData extends React.PureComponent {
     return (
       <span>
         {NewChild}
+        { data && 
+          <span>{getScript(data)}</span> 
+        }
       </span>
     );
   }
@@ -60,15 +99,23 @@ function routerCreateElement() {
   }
 }
 
-function wrapWithResolver(Component, props, key){
+function wrapWithResolver(WrappedComponent, props, key){
   return (
-    <Resolver key={key}>
-      <Component {...props} />
+    <Resolver key={key} mainComponent={true}>
+      <WrappedComponent {...props} />
+    </Resolver>
+  );
+}
+
+// HOC (added manually to nested components)
+// TODO: Merge with wrapWithResolver()
+const withData = (WrappedComponent) => {
+  return (props, context) => (
+    <Resolver>
+      <WrappedComponent {...props} />
     </Resolver>
   );
 }
 
 export default ComponentData;
-
-export { Resolver, resolve, resolveRecursive, getScript, HOC };
-
+export { Resolver, resolve, getScript, withData };

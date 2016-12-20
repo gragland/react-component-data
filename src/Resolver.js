@@ -1,4 +1,5 @@
 import React from 'react';
+import { isClient } from './script.js';
 
 // Tiny Promise polyfill
 // Much smaller filesize then using async/await and transpiling
@@ -8,76 +9,97 @@ export class Resolver extends React.PureComponent {
 
   constructor(props, context){
     super(props);
-    this.state = {};
-    this.clientResolve = this.clientResolve.bind(this);
+
+    this.state = {
+      propsForChild: null
+    };
+
+    this.log = this.log.bind(this);
     this.clientResolveFromComponent = this.clientResolveFromComponent.bind(this);
   }
 
   componentWillMount(){
 
-    console.log('[RESOLVER] Mounted');
+    this.log('Mounted');
 
-    const { data } = this.context;
+    let propsForChild;
 
-    // SERVER
+    // Grab data object via context
+    const data  = (this.context ? this.context.data : null);
+
     if (data){
-      console.log('[RESOLVER Have props from context');
-      const props = this.getPropsFromData(data);
-      this.setState({ data: props });
-    // CLIENT
-    }else if (isClient()){
-      this.clientResolve()
+
+      this.log('Have data via context', data);
+
+      // Get props for the child component out of data
+      propsForChild = this.getPropsFromData(data);
+
+      if (propsForChild){
+        this.log('Have props from data', propsForChild);
+        this.setState({ propsForChild: propsForChild });
+      }else{
+        this.log('No props from data');
+      }
+
+    }else{
+
+      this.log('No data via context');
+
     }
 
+    // If we're client-size and don't have props then fetch them via child Component.method()
+    //
+    if (!propsForChild && isClient()){
+      this.clientResolveFromComponent()
+      .then((propsForChild) => {
+        if (propsForChild){
+          this.log(`Resolved Component.${this.context.method}()`, propsForChild);
+          this.setState({ propsForChild: propsForChild });
+        }else{
+          this.log(`Unable to resolve Component.${this.context.method}()`);
+        }
+      });
+    }
+
+  }
+
+  getChildName(){
+    const child = React.Children.only(this.props.children);
+    return child.type.displayName;
+  }
+
+  log(message, object){
+    const string = `[RESOLVER - ${this.getChildName()}] ${message}`;
+    if (object && isClient()){
+      console.log(string, object);
+    }else{
+      console.log(string);
+    }
   }
 
   getPropsFromData(data){
     let props;
 
-    // If we're using recursive resolve then components are indexed by displayName
+    const { mainComponent } = this.props;
+
+    // If data._resolverComponents exists that means we are using our recursive resolver
+    // All components data will be indexed by component displayName
+    // TODO: Figure out a better index (combine multiple object properties, maybe all props?)
     if (data && data._resolverComponents){
 
-      const child = React.Children.only(this.props.children);
-      props = data._resolverComponents[child.type.displayName];
+      props = data._resolverComponents[this.getChildName()];
 
-    // Otherwise data is the props
-    // We can't normalize this because React Router renderProps doesn't give us the component instance
-    }else{
+    // If not using our recursive resolver and this is the mainComponent.
+    // This prevents child components using our withData HOC from being given the same props as the main component ...
+    // ... and forces them to fetch their own data client-side. When recursive is off we don't ....
+    // ... index data by component.displayName so we need a way for child component to know it's not their data.
+    }else if (data && mainComponent === true){
       props = data;
+    }else{
+      props = null;
     }
 
     return props;
-  }
-
-  clientResolve(){
-
-    console.log('[RESOLVER] Resolving props client-side');
-
-    let data = this.clientResolveFromDOM();
-
-    if (data){
-      this.setState({ data: data });
-      console.log('[RESOLVER] Re-hydration was successful', data);
-    }else{
-
-      console.log('[RESOLVER] Re-hydration failed (no data)');
-
-      this.clientResolveFromComponent()
-      .then((data) => {
-        if (data){
-          console.log(`[RESOLVER] Resolved Component.${this.context.method}()`, data);
-          this.setState({ data: data });
-        }else{
-          console.log(`[RESOLVER] Unable to resolve Component.${this.context.method}()`);
-        }
-      });
-    }
-  }
-
-  clientResolveFromDOM(){
-    const payloadElement = document.getElementById('COMPONENT_DATA_PAYLOAD');
-    const data = (payloadElement ? JSON.parse(payloadElement.innerHTML) : null);
-    return this.getPropsFromData(data);
   }
 
   // Call component's static method, save data to state, pass as props to child component
@@ -94,10 +116,13 @@ export class Resolver extends React.PureComponent {
 
   render(){
 
-    const Component = React.Children.only(this.props.children);
+    const { children } = this.props;
+    const { propsForChild } = this.state;
 
-    if (this.state.data){
-      const ComponentWithProps = React.cloneElement(Component, this.state.data);
+    const Component = React.Children.only(children);
+
+    if (propsForChild){
+      const ComponentWithProps = React.cloneElement(Component, propsForChild);
       // Adding a key so component remounts
       // Easier because no need to implement componentWillReceiveProps
       const ComponentWithKey = React.cloneElement(ComponentWithProps, { key: 'hasInitialProps' });
@@ -108,19 +133,13 @@ export class Resolver extends React.PureComponent {
   }
 }
 
+Resolver.defaultProps = {
+  mainComponent: false
+}
+
 Resolver.contextTypes = {
   method: React.PropTypes.string,
   data: React.PropTypes.object
 }
 
-function isClient(){
-  return typeof window !== 'undefined';
-}
 
-export const HOC = (WrappedComponent) => {
-  return (props, context) => (
-    <Resolver>
-      <WrappedComponent {...props} />
-    </Resolver>
-  );
-}

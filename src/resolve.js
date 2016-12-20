@@ -1,33 +1,26 @@
-import Promise from 'promise-polyfill'; 
+import React from 'react';
+import { resolveSimple } from './resolveSimple.js';
+import { resolveRecursive } from './resolveRecursive.js';
 
-export default function resolve(thing) {
+export function resolve(component, props, recursive){
 
-  // If it's a component then call getInitialProps()
-  if (thing.getInitialProps){
-    return Promise.resolve(thing.getInitialProps());
+  if (!component.prototype || !component.prototype.isReactComponent) {
+    throw new Error('[React Component Data] Resolve expects a valid react component');
   }
 
-  if (!thing.router){
-    throw new Error('resolve() expects a React component or a React Router renderProps object');
+  const element = React.createElement(component, props);
+
+  if (recursive){
+
+    return resolveRecursive(element)
+    .then((response) => {
+        if (!response._resolverComponents)
+          response = null;
+        return response;
+    });
+
+  }else{
+    return resolveSimple(element);
   }
 
-  const { components, params } = thing;
-
-  // Filter out null values
-  const valid = components.filter((component) => component);
-
-  if (!valid){
-    return null;
-  } 
-
-  // Get components that have the getInitialProps static method
-  const withFunction = valid.filter((component) => component.getInitialProps);
-
-  if (!withFunction[0] || !withFunction[0].getInitialProps){
-    return null;
-  } 
-
-  // Call the first component's getInitialProps method
-  // In the future we can consider fetching data for nested components
-  return Promise.resolve(withFunction[0].getInitialProps());
 }

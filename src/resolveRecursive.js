@@ -143,8 +143,15 @@ function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps, isTopL
   // Wait on each query that we found, re-rendering the subtree when it's done.
   const mappedQueries = queries.map(({ query, element, context }) =>  {
     return query.then((newProps) => {
+      const displayName = element.type.displayName;
+
+      if (!displayName){
+        // TODO: Use Promise.reject and catch()
+        throw new Error('[React Component Data] When resolving component data recursively each component must have a displayName set.');
+      }
+
       // Add to finalData array that will be returned
-      finalData[element.type.displayName] = newProps;
+      finalData[displayName] = newProps;
       // Traverse children
       // Component will use newProps returned by the query so we can find any children it might have as a result
       return getDataFromTree(element, context, false, newProps);
