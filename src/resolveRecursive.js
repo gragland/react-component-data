@@ -92,7 +92,7 @@ function getQueriesFromTree(rootElement, rootContext, fetchRoot, mergeProps){
   const queries = [];
 
   const isStaticMethod = true;
-  const methodName = 'getInitialProps';
+  const methodName = 'getData';
 
   walkTree(rootElement, rootContext, mergeProps, (element, instance, context) => {
 

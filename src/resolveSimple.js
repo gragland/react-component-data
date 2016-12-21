@@ -3,15 +3,17 @@ import Promise from 'promise-polyfill';
 
 export function resolve(component, props) {
 
+  const methodName = 'getData';
+
   if (!component.prototype || !component.prototype.isReactComponent) {
     throw new Error('[React Component Data] Resolve expects a valid react component');
   }
 
   const element = React.createElement(component, props);
 
-  // If it's a component then call getInitialProps()
-  if (element.type.getInitialProps){
-    return Promise.resolve(element.type.getInitialProps());
+  // If it's a component then call its data method
+  if (element.type[methodName]){
+    return Promise.resolve(element.type[methodName]());
   }
 
   if (!element.props.router){
@@ -27,14 +29,14 @@ export function resolve(component, props) {
     return null;
   } 
 
-  // Get components that have the getInitialProps static method
-  const withFunction = valid.filter((component) => component.getInitialProps);
+  // Get components that have the data method
+  const withFunction = valid.filter((component) => component[methodName]);
 
-  if (!withFunction[0] || !withFunction[0].getInitialProps){
+  if (!withFunction[0] || !withFunction[0][methodName]){
     return null;
   } 
 
-  // Call the first component's getInitialProps method
+  // Call the first component's data method
   // In the future we can consider fetching data for nested components
-  return Promise.resolve(withFunction[0].getInitialProps());
+  return Promise.resolve(withFunction[0][methodName]());
 }

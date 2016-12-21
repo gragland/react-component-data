@@ -97,7 +97,7 @@ ComponentData.childContextTypes = {
 };
 
 ComponentData.defaultProps = {
-  method: 'getInitialProps',
+  method: 'getData',
   data: null
 }
 
