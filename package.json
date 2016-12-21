@@ -1,11 +1,12 @@
 {
   "name": "react-component-data",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "React Component Data",
-  "main": "lib/rcd.js",
+  "main": "index.js",
   "scripts": {
-    "build": "npm run build-library && npm run build-script",
+    "build": "npm run build-library && npm run build-library-recursive",
     "build-library": "NODE_ENV=production TYPE=library webpack --config webpack.config.js",
+    "build-library-recursive": "NODE_ENV=production TYPE=library RECURSIVE=1 webpack --config webpack.config.js",
     "build-script": "NODE_ENV=production TYPE=script webpack --config webpack.config.js",
     "prepublish": "npm run build"
   },

@@ -1,9 +1,11 @@
 const webpack = require('webpack');
 
 const common = {
-  entry: {
-    rcd: './src/ComponentData.js'
-  },
+  entry: (process.env.RECURSIVE ? {
+    recursive: './src/recursive.js'
+  } : {
+    index: './src/index.js'
+  }),
   module: {
     loaders: [
       { 
@@ -22,7 +24,7 @@ const common = {
 // Parent project should run any minification plugins
 const library = {
   output: {
-    path: __dirname + '/lib/',
+    path: __dirname,
     filename: '[name].js',
     library: 'ReactComponentData',
     libraryTarget: 'umd'

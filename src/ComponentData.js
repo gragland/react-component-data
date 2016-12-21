@@ -1,7 +1,6 @@
 import React from 'react';
 import { Resolver } from './Resolver.js';
 import { getScript, getScriptData, isClient } from './script.js';
-import { resolve } from './resolve.js';
 
 /* 
   - Handles passing of data down the tree and re-hydration between server and client
@@ -18,6 +17,8 @@ import { resolve } from './resolve.js';
     ... We either need to (1) clear state before route change, (2) store an expiration time, or (3) always index data with a reliable key (component.displayname, etc)
     ... (2) might be the best for now because it also solves the issue of browsing back to the original route, but not wanting it to load its stale data
     ... When ComponentData hydrates have it set current time to state, then Resolvers can check to see how much time has passed.
+    ... We could start always indexing and include the react router path. Maybe RRPATH_DISPLAYNAME. Then even if it was just "/_" it would at least be unique across routes.
+    ... OR maybe even RRPATH_DISPLAYNAME_ROUNDEDTOCLOSESSECOND (NOPE wouldnt work since server time might be off);
 */
 
 class ComponentData extends React.PureComponent {
@@ -33,17 +34,22 @@ class ComponentData extends React.PureComponent {
   getChildContext () {
     return {
       method: this.props.method,
-      data: this.state.data
+      data: this.state.data,
+      time: this.state.time
     };
   }
 
   componentWillMount(){
     let data;
+    let time;
 
     // If client-side grab <script> data from DOM before it's wiped clean
     // This way we don't have to require that the library user add the <script> tag themself
     if (isClient()){
       data = getScriptData();
+
+      const d = new Date();
+      time = d.getTime();
 
     // If server-side then we expect all data to be passed in as a prop
     }else{
@@ -51,7 +57,10 @@ class ComponentData extends React.PureComponent {
     }
 
     if (data){
-      this.setState({ data: data });
+      this.setState({ 
+        data: data,
+        time: time
+      });
     }
   }
 
@@ -83,7 +92,8 @@ class ComponentData extends React.PureComponent {
 
 ComponentData.childContextTypes = {
   method: React.PropTypes.string,
-  data: React.PropTypes.object
+  data: React.PropTypes.object,
+  time: React.PropTypes.number
 };
 
 ComponentData.defaultProps = {
@@ -117,5 +127,5 @@ const withData = (WrappedComponent) => {
   );
 }
 
-export default ComponentData;
-export { Resolver, resolve, getScript, withData };
+
+export { ComponentData, withData };

@@ -2,3 +2,5 @@
 node_modules
 npm-debug.log
 lib
+index.js
+recursive.js

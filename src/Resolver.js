@@ -80,7 +80,20 @@ export class Resolver extends React.PureComponent {
   getPropsFromData(data){
     let props;
 
+    const { time } = this.context;
+
     const { mainComponent } = this.props;
+
+    // If more then 0.5 seconds has passed since data was made available via ComponentData context then consider it expired.
+    // Re-hydration should realistically take around 1/100th of a second
+    // Kinda hacky but this prevents context data from being used when browsing to a new route
+    // Once we have a reliable way to index data by a unique component id then this won't be needed ...
+    // ... unless we still want to have data expire after a certain amount of time (such as when we browse to a new route and then back)
+    const d = new Date();
+    const currTime = d.getTime();
+    if (currTime - time > 500){
+      return null;
+    }
 
     // If data._resolverComponents exists that means we are using our recursive resolver
     // All components data will be indexed by component displayName
@@ -139,7 +152,8 @@ Resolver.defaultProps = {
 
 Resolver.contextTypes = {
   method: React.PropTypes.string,
-  data: React.PropTypes.object
+  data: React.PropTypes.object,
+  time: React.PropTypes.number
 }
 
 

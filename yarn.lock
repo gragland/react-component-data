@@ -1577,6 +1577,14 @@ rc@~1.1.6:
     minimist "^1.2.0"
     strip-json-comments "~1.0.4"
 
+react-component-data@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/react-component-data/-/react-component-data-0.0.2.tgz#c9164456f1bd63aa193dd991c3a517dcaafcebc3"
+  dependencies:
+    lodash "^4.17.2"
+    object-assign "^4.1.0"
+    promise-polyfill "^6.0.2"
+
 "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.1.0:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.2.tgz#a9e6fec3c7dda85f8bb1b3ba7028604556fc825e"

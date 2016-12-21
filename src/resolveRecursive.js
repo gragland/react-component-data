@@ -2,6 +2,7 @@ import React from 'react';
 import flattenDeep from 'lodash/flattendeep';
 import assign from 'object-assign';
 import { getScript } from './script.js';
+import Promise from 'promise-polyfill'; 
 
 // Recurse an React Element tree, running visitor on each element.
 // If visitor returns `false`, don't call the element's render function
@@ -167,17 +168,18 @@ function getDataFromTree(rootElement, rootContext, fetchRoot, mergeProps, isTopL
   });
 }
 
-export function resolveRecursive(element){
+
+export function resolve(component, props){
+
+  if (!component.prototype || !component.prototype.isReactComponent) {
+    throw new Error('[React Component Data] Resolve expects a valid react component');
+  }
+
+  const element = React.createElement(component, props);
+
   return getDataFromTree(element, null, true, null, true)
   .then((finalData) => {
 
-    const data = { _resolverComponents: finalData };
-    return data;
-
-    /*
-    const script = getScript(data);
-    return { data: data, script: script };
-    */
-
-  })
+    return (finalData ? { _resolverComponents: finalData } : null);
+  });
 }

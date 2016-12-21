@@ -1,6 +1,13 @@
+import React from 'react';
 import Promise from 'promise-polyfill'; 
 
-export function resolveSimple(element) {
+export function resolve(component, props) {
+
+  if (!component.prototype || !component.prototype.isReactComponent) {
+    throw new Error('[React Component Data] Resolve expects a valid react component');
+  }
+
+  const element = React.createElement(component, props);
 
   // If it's a component then call getInitialProps()
   if (element.type.getInitialProps){
