@@ -28,7 +28,15 @@ const library = {
     filename: '[name].js',
     library: 'ReactComponentData',
     libraryTarget: 'umd'
-  }
+  },
+  plugins: [
+    // So we know not to show console.log
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify('production')
+      }
+    })
+  ]
 }
 
 // Build for script tag
@@ -44,8 +52,7 @@ const script = {
       'process.env': {
         NODE_ENV: JSON.stringify('production')
       }
-    }),
-    new webpack.optimize.UglifyJsPlugin()
+    })
   ]
 }
 

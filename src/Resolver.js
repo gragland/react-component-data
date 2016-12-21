@@ -48,7 +48,6 @@ export class Resolver extends React.PureComponent {
     }
 
     // If we're client-size and don't have props then fetch them via child Component.method()
-    //
     if (!propsForChild && isClient()){
       this.clientResolveFromComponent()
       .then((propsForChild) => {
@@ -69,11 +68,16 @@ export class Resolver extends React.PureComponent {
   }
 
   log(message, object){
-    const string = `[RESOLVER - ${this.getChildName()}] ${message}`;
-    if (object && isClient()){
-      console.log(string, object);
-    }else{
-      console.log(string);
+
+    if (process.env.NODE_ENV !== 'production'){
+
+      const string = `[RESOLVER - ${this.getChildName()}] ${message}`;
+      if (object && isClient()){
+        console.log(string, object);
+      }else{
+        console.log(string);
+      }
+
     }
   }
 
