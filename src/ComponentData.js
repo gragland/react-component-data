@@ -12,13 +12,6 @@ import { getScript, getScriptData, isClient } from './script.js';
   - When rendered on the client:
     - Gets <script> data from DOM (before DOM gets wiped by client-side render)
     - Saves <script> data to state and makes it available via context for <Resolver> components
-  - TODO:
-    - When browsing to different route the component gets original routes props added to it (since it gets data from context) ...
-    ... We either need to (1) clear state before route change, (2) store an expiration time, or (3) always index data with a reliable key (component.displayname, etc)
-    ... (2) might be the best for now because it also solves the issue of browsing back to the original route, but not wanting it to load its stale data
-    ... When ComponentData hydrates have it set current time to state, then Resolvers can check to see how much time has passed.
-    ... We could start always indexing and include the react router path. Maybe RRPATH_DISPLAYNAME. Then even if it was just "/_" it would at least be unique across routes.
-    ... OR maybe even RRPATH_DISPLAYNAME_ROUNDEDTOCLOSESSECOND (NOPE wouldnt work since server time might be off);
 */
 
 class ComponentData extends React.PureComponent {
