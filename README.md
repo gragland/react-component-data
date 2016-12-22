@@ -149,7 +149,7 @@ ReactDOM.render(
 
 ### 🌀 Recursive Resolve (experimental)
 If you have nested components with data dependencies then you can use the recursive resolve method. Rather then just resolve data for the top level component (or route component when used with React Router), it will recursively iterate through your entire component tree, resolving each component's data dependency and calling its componentWillMount lifecycle method before moving farther down the tree. 
-```   
+```jsx   
 import ComponentData, { resolve } from 'react-component-data/recursive';
 ```
 
