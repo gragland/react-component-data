@@ -153,7 +153,7 @@ If you have nested components with data dependencies then you can use the recurs
 import ComponentData, { resolve } from 'react-component-data/recursive';
 ```
 
-When using the recursive resolver you'll also need to wrap each nested (but not top level) component that implements `getData()` with our Higher Order Component like so:
+Usage is exactly the same as in the examples above, except that you'll also need to wrap each nested component that expects data with our `withData() `Higher Order Component like so:
 ```jsx
 import { withData } from 'react-component-data';
 
