@@ -12,7 +12,7 @@ $ npm install react-component-data --save
 
 ### Component
 
-Give your component a `getData()` static method which returns an object containing the props that your component should receive. On server-side render (and subsequent client-side render/re-hydration) your component will get those props on its initial mount. If a component is not rendered server-side its props will be fetched asyncronously and you can manage your component's loading state however you wish.
+The only change you need to make to your component is to give it a `getData()` static method which returns an object containing the props that it would like to receive. On server-side render (and subsequent client-side render/re-hydration) your component will get those props on its initial mount. If a component is not rendered server-side its props will be fetched asyncronously and you can manage your component's loading state however you wish.
 
      
 
