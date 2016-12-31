@@ -1,6 +1,6 @@
 # 🍯 React Component Data
 
-Data fetching for universal React applications. Components declare the data they'd like to receive as props. Plays nicely with React Router.
+Data fetching for server-rendered React applications. Components declare the data they'd like to receive as props. Plays nicely with React Router.
 
 ## Usage
 
