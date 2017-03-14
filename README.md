@@ -164,8 +164,8 @@ class NestedComponent extends React.Component {
 export default withData(NestedComponent);
 ```  
  
-
-  
+## Demo
+<a href="https://unsplash.now.sh">unsplash.now.sh</a> ([source](https://github.com/gragland/unsplash-demo))
   
 ## Acknowledgements
 
